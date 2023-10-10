@@ -96,8 +96,6 @@ const ratings = asyncHandler(async (req, res ) =>{
             new: true
         }
         )
-
-    
     }else{
         //add srar & comment
       await Product.findByIdAndUpdate(pid,{
@@ -107,13 +105,24 @@ const ratings = asyncHandler(async (req, res ) =>{
         // {new :true}).populate("ratings.postedBy","name")
         // {new :true}).populate('ratings.postedBy','name').lean()
     }
+     //sum rating 
+    const updatedProduct = await Product.findById(pid)
+    // tinh duoc tong so danh gia
+    const ratingCount = updatedProduct.ratings.length
+
+    const sumRatings = updatedProduct.ratings.reduce((sum,el) => sum + +el.star, 0)
+    //chia
+    updatedProduct.totalRatings = Math.round(sumRatings * 10/ratingCount) / 10 
+    await updatedProduct.save()
     return res.status(200).json({
         status: true,
-        message: "đánh giá thành công !",
-        ratingProduct
+        updatedProduct,
     })
-
 })
+   
+
+
+
 // const ratings = asyncHandler(async (req, res) => {
 //     const {_id} = req.user;
 //     const {star, comment, pid} = req.body;
