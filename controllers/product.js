@@ -195,7 +195,7 @@ const deleteProduct = asyncHandler(async (req, res) => {
         deletedProduct: deletedProduct ? deletedProduct : 'Cannot delete product'
     })
 })
-
+/// test
 const uploadImageProduct = asyncHandler(async ( req, res) =>{
     const { pid } = req.params
     if(!req.files) throw new Error('Missing inputs')
