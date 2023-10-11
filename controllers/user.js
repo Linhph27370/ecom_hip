@@ -4,6 +4,7 @@ const { generateAccessToken, generateRefreshToken } = require('../middlewares/jw
 const jwt = require('jsonwebtoken')
 const sendMail = require('../ultils/sendMail')
 const crypto = require('crypto')
+const { log } = require('console')
 
 
 const register = asyncHandler(async (req, res) => {
@@ -67,7 +68,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     // Lấy token từ cookies
     const cookie = req.cookies
     // Check xem có token hay không
-    if (! cookie && !cookie.refreshToken) throw new Error('No refresh token in cookies')
+    if (!cookie && !cookie.refreshToken) throw new Error('No refresh token in cookies')
     // Check token có hợp lệ hay không
     const rs = await jwt.verify(cookie.refreshToken, process.env.JWT_SECRET)
     const response = await User.findOne({ _id: rs._id, refreshToken: cookie.refreshToken })
@@ -171,6 +172,48 @@ const updateUserByAdmin = asyncHandler(async (req, res) => {
         updatedUser: response ? response : 'Some thing went wrong'
     })
 })
+const updateUserAddress = asyncHandler(async (req, res) => {
+    // 
+    const { _id } = req.user
+    console.log(_id);
+    if (!req.body.address) throw new Error('Missing inputs user12')
+    console.log(_id);
+    const response = await User.findByIdAndUpdate(_id, { $push: { address: req.body.address } }, { new: true }).select('-password -role -refreshToken')
+    return res.status(200).json({
+        success: response ? true : false,
+        updatedUser: response ? response : 'Some thing went wrong'
+    })
+})
+const updateCart = asyncHandler(async (req, res) => {
+    // 
+    const { _id } = req.user
+    const { pid, quantity, color } = req.body
+    if (!pid || !quantity || !color) throw new Error('Missing inputs')
+    const user = await User.findById(_id).select('cart')
+    const alreadyproduct = user?.cart?.find(el => el.product.toString() === pid)
+    if (alreadyproduct) {
+        if (alreadyproduct.color === color) {
+            const response = await User.updateOne({cart: {$elemMatch: alreadyproduct}}, {$set: {"cart.$.quantity": quantity}}, {new: true})
+            return res.status(200).json({
+                success: response ? true : false,
+                updatedUser: response ? response : 'Some thing went wrong'
+            })
+        } else {
+            const response = await User.findByIdAndUpdate(_id, { $push: { cart: { product: pid, quantity, color } } }, { new: true })
+            return res.status(200).json({
+                success: response ? true : false,
+                updatedUser: response ? response : 'Some thing went wrong'
+            })
+        }
+    } else {
+        const response = await User.findByIdAndUpdate(_id, { $push: { cart: { product: pid, quantity, color } } }, { new: true })
+        return res.status(200).json({
+            success: response ? true : false,
+            updatedUser: response ? response : 'Some thing went wrong'
+        })
+    }
+
+})
 module.exports = {
     register,
     login,
@@ -182,5 +225,7 @@ module.exports = {
     getUsers,
     deleteUser,
     updateUser,
-    updateUserByAdmin
+    updateUserByAdmin,
+    updateUserAddress,
+    updateCart
 }
