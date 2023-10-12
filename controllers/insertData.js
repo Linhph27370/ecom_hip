@@ -1,8 +1,8 @@
 const Product = require('../models/product')
 const asynHandler = require('express-async-handler')
-const data = require('../data/data2.json')
+const data = require('../../data/data2.json')
 const categoryData = require('../../data/cate_brand')
-const productCategory = require('../../models/productCategory')
+const productCategory = require('../models/productCategory')
 const slugify = require('slugify')
 
 const fn = async (product) =>{
